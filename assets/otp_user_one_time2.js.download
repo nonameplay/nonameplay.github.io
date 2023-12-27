@@ -1,0 +1,313 @@
+//SubmitEvent {isTrusted: true, submitter: button.btn.btn-primary.shadow-primary.btn-lg.w-100, type: 'submit', target: form#signup_form, currentTarget: form#signup_form, …}
+//Minification and Obfuscation:
+//https://www.toptal.com/developers/javascript-minifier
+//https://codebeautify.org/javascript-obfuscator#
+
+//https://developers.smsmkt.com/api-reference
+$(function() {
+const OTP_URL = API_HOST_URL + '/api/sendOtp2.php';
+const OTP_VALIDATE_URL = API_HOST_URL + '/api/validateOtp.php';
+//const OTP_URL = 'http://localhost/api/favs/sendOtp.php';
+
+/*var smmspot_hasLogin = false;
+
+if (typeof smmspot_userKey !== 'undefined') {
+    smmspot_hasLogin = true
+} else {
+    smmspot_hasLogin = false
+}*/
+
+let appendDiv = '<div class="input-group-append"><button id="optModal_openbtn"class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#otpModal" data-keyboard="false">ตรวจสอบ</button></div>';
+
+let otpModalDiv ='<div class="modal fade" id="otpModal" tabindex="-1" role="dialog" aria-labelledby="otpModalTitle" data-backdrop="static">' +
+'  <div class="modal-dialog modal-dialog-centered" role="document">'+
+'    <div class="modal-content">' +
+'      <div class="modal-header">' +
+'        <h5 class="modal-title" id="otpModalTitle">ยืนยันเบอร์โทรศัพท์</h5>' +
+'		 <button type="button" class="btn-close" data-dismiss="modal" modaria-label="Close"></button>' +
+'      </div>'+
+'      <div class="modal-body">' +
+'		<div id="div_modal_phone" class="col-md-12 input-group"> ' +
+'			<input type="text" class="form-control rounded-right" placeholder="หมายเลขโทรศัพท์" id="otp_phone" maxlength="15" style="min-width: 300px;max-width: 250px;">' +
+'			<div class="input-group-append"><button class="btn btn-primary" type="button" data-toggle="modal" id="sendOtp_btn" onclick=\"sendOtp();\" style="background: linear-gradient(269.37deg, #f6b26b 2.73%, #f9cb9c 99.46%);">ส่ง otp</button></div>' +
+'		</div>' +
+'	<div class="" style="color: #FF3300">* ถ้าคุณพบปัญหาในการสมัครสมาชิกโปรด <a href="/contact" target="_blank">ติดต่อเรา</a></div> ' +
+'       <div class="col-md-12"><p id="otp_cool_down_p" style="visibility:hidden;" class="text-danger float-right p-2">*รหัส otp มีอายุ <span id="otp_cool_down_second">60</span> วินาที</p></div>' +
+'		<div id="div_otp6digit" class="col-md-12 d-none input-group">' +
+'			<input type="hidden" id="uuid">' +
+'			<input type="text" id="otp6digit" class="form-control text-center" maxlength="6" placeholder="รหัส OTP" style="min-width: 300px;max-width: 250px;">' +
+'			<div class="input-group-append"><button class="btn btn-primary" type="button" id="verifyOtp_btn" onclick=\"verifyOtp();\" style="background: linear-gradient(269.37deg, #f6b26b 2.73%, #f9cb9c 99.46%);">ตรวจสอบ</button></div></div>';	
+'       </div>' +
+'      <div class="modal-footer">' +
+'        <button type="button" class="btn-close" data-dismiss="modal" modaria-label="Close">Close</button>' +
+'        <button type="button" class="btn btn-primary" style="background: linear-gradient(269.37deg, #f6b26b 2.73%, #f9cb9c 99.46%);">Save changes</button>' +
+'      </div>' +
+'    </div>' +
+'  </div>' +
+'</div>';
+
+/*document.querySelector('#div_phone').innerHTML += appendDiv;
+document.querySelector('#div_phone').classList.add('input-group');
+document.querySelector('#phone').setAttribute('data-readonly','')
+document.querySelector('#phone').setAttribute('tabindex','-1')
+document.querySelector('body').innerHTML += otpModalDiv;
+*/
+
+let otptoken = null;
+let refcode = null;
+let otpstatus = false;
+
+if(typeof localStorage.otptoken !='undefined' && localStorage.otptoken != ''){
+	otptoken = localStorage.otptoken;
+}
+if(typeof localStorage.refcode !='undefined' && localStorage.refcode != ''){
+	refcode = localStorage.refcode;
+}
+
+if(typeof localStorage.otpstatus !='undefined' && localStorage.otpstatus == 'true'){
+	otpstatus = true;
+}
+
+if(window.location.pathname =='/signup' && typeof localStorage.verifiedphone !='undefined' && localStorage.verifiedphone != ''){
+	phone.value = localStorage.verifiedphone;
+}
+
+let otpResetTimeoutId = null;
+let otpCoolDownTimeoutId = null;
+let y = null;
+sendOtp = function(){
+  	otp_cool_down_p.style.visibility = 'hidden';
+  	document.querySelector("#div_otp6digit").classList.add('d-none');
+  
+	otptoken = null;
+	refcode = null;
+	if(otp_phone.value.length >= 10 && /^\d+$/.test(getPhoneNumber().replace('+',''))){
+      	sendOtp_btn.disabled=true
+		postData(OTP_URL, {
+		"app":"servsmm.com",
+		"uuid": document.querySelector('#uuid').value,
+        "phone": getPhoneNumber()
+        }).then(response=>{
+			console.log(response)
+			if(response.code == '000' && response.detail == 'OK.'){
+				//console.log("แสดง ref_code");
+				//console.log(response.result.ref_code);
+				//console.log(response.result.token);
+				otptoken = response.result.token;
+				refcode = response.result.ref_code;
+              	
+                //show input
+              	otp_cool_down_p.style.visibility = 'visible';
+              
+              	let otp_cooldown_sec=60;
+                otpResetTimeoutId = setTimeout(function(){
+                   // todo reset
+        		  clearTimeout(otpCoolDownTimeoutId);
+                  otp_cool_down_p.style.visibility = 'hidden';
+                  document.querySelector("#div_otp6digit").classList.add('d-none');
+                  sendOtp_btn.disabled=false;
+                }, otp_cooldown_sec * 1000);
+
+                otpCoolDownTimeoutId = setTimeout(function(){ 
+                  otp_cool_down_second.textContent = otp_cooldown_sec;
+                  y = setInterval(function() {
+                    otp_cooldown_sec -= 1;
+                    otp_cool_down_second.textContent = otp_cooldown_sec;
+
+                    // If the count down is finished, write some text
+                    if(otp_cooldown_sec < 0) {
+                      clearInterval(y);
+                    }
+                  }, 1000);
+                }, 200);
+              
+				document.querySelector("#div_otp6digit").classList.remove('d-none');
+			}else{
+				//console.log("เกิดข้อผิดพลาดกรุณาลองใหม่อีกครั้ง");
+				clearInterval(y);
+            	sendOtp_btn.disabled=false;
+              	if(response.detail =='Input phone invalid.'){
+                  alert('เบอร์โทรศัพท์ ไม่ถูกต้อง');
+                }
+			}
+		});
+	}else{
+		alert('โปรดตรวจสอบ เบอร์โทรศัพท์');
+	}
+	
+}
+verifyOtp = function(){
+	var otpcode = otp6digit.value;
+	if(otpcode.length == 6){
+        clearTimeout(otpResetTimeoutId);
+        clearTimeout(otpCoolDownTimeoutId);
+		clearInterval(y);
+      	otp_cool_down_p.style.visibility = 'hidden';
+      	
+      	verifyOtp_btn.disabled=true;
+		postData(OTP_VALIDATE_URL, {
+				"token": otptoken,
+				"ref_code": refcode,
+				"otp_code": otpcode,
+				"phone": getPhoneNumber()
+			}).then(response=>{
+				//console.log(response)
+				if(response.code == '000' && response.detail == 'OK.'){
+					//console.log("แสดง status");
+					if(response.result.status){
+						alert('รหัส otp ถูกต้อง');
+                      	phone.value = getPhoneNumber();
+                        document.querySelector('#div_phone').classList.remove('input-group');
+						document.querySelector('#div_phone div').innerHTML ='';
+                      	//$('#otpModal').modal('hide');
+						document.querySelector('#otpModal button.btn-close').click();
+						otpstatus = true;
+						
+						saveVerifiedPhone();
+					}else{
+						alert('รหัส otp ไม่ถูกต้อง');
+                        sendOtp_btn.disabled=false;
+						
+						removeVerifiedPhone();
+					}
+					//console.log(response.result.status);
+				}else{
+                  	alert("เกิดข้อผิดพลาดกรุณาลองใหม่อีกครั้ง");
+                  	sendOtp_btn.disabled=false;
+                  	document.querySelector("#div_otp6digit").classList.add('d-none');
+					//console.log(response.code);
+					//console.log(response.detail);
+					
+					removeVerifiedPhone();
+				}
+			});
+        verifyOtp_btn.disabled=false;
+	}else{
+		alert('โปรดใส่ รหัส otp 6 หลัก');
+	}
+}
+
+getPhoneNumber = function(){
+  	var phoneTrimed = otp_phone.value.trim();
+	var phoneArr = phoneTrimed.split(' ');
+  	if(phoneArr.length >= 2){
+    	return phoneArr[0]+ (phoneArr[1].indexOf('0') == 0 ? phoneArr[1] .substring(1) : phoneArr[1]) ;
+    }
+  	return phoneTrimed;
+}
+
+uuid = async function () {
+	const response = await fetch(API_HOST_URL + '/api/uuid.php');
+	const text = await response.text();
+	//console.log(text);
+	document.querySelector('#uuid').value = text;
+}
+
+handleSignUpform = function(event){
+	event.preventDefault();
+	// verify username
+	if($('#login').val().toLowerCase().includes("admin")){
+		$('#username_error_msg').text('username ไม่อนุญาตให้ใช้คำว่า admin')
+		return false;
+	}
+	if(phone.value != '' && refcode != null && otptoken != null && otpstatus){
+		if(localStorage.verifiedphone != phone.value){
+			removeVerifiedPhone();
+			alert("กรุณาตรวจสอบหมายเลขโทรศัพท์ใหม่");
+			location.reload();
+		}else{
+			signup_form.submit();
+		}
+	}else{
+		alert("กรุณาตรวจสอบหมายเลขโทรศัพท์");
+		return false;
+	}
+}
+
+// Sample hash function (You can use a library like CryptoJS for more secure hashing)
+function hashFunction(str) {
+	let hash = 0;
+	if (str.length === 0) return hash;
+	for (let i = 0; i < str.length; i++) {
+	  const char = str.charCodeAt(i);
+	  hash = (hash << 5) - hash + char;
+	  hash = hash & hash; // Convert to 32-bit integer
+	}
+	return hash;
+  }
+
+// Calculate the hash of the original function
+const originalHash = hashFunction(handleSignUpform.toString());
+
+if($('#div_phone').length > 0){
+	uuid();
+	if(refcode == null || otptoken == null || !otpstatus){
+		document.querySelector('#div_phone').innerHTML += appendDiv;
+		document.querySelector('#div_phone').classList.add('input-group');
+		document.querySelector('#phone').setAttribute('data-readonly','')
+		document.querySelector('#phone').setAttribute('tabindex','-1')
+		document.querySelector('body').innerHTML += otpModalDiv;
+	}
+	/*document.querySelector('#signup_form').addEventListener('submit', event => {
+		if (hashFunction(handleSignUpform.toString()) !== originalHash) {
+			// Code has been tampered with
+			console.log('Code has been tampered with. Aborting form submission.');
+			//event.preventDefault();
+			return false;
+		}
+		// Call the original event handler function
+		handleSignUpform(event);
+	}, { passive: true });*/
+	$("#signup_form").submit(function(){
+		event.preventDefault();
+		// verify username
+		if($('#login').val().toLowerCase().includes("admin")){
+			$('#username_error_msg').text('username ไม่อนุญาตให้ใช้คำว่า admin')
+			return false;
+		}
+		if(phone.value != '' && refcode != null && otptoken != null && otpstatus){
+			if(localStorage.verifiedphone != phone.value){
+				removeVerifiedPhone();
+				alert("กรุณาตรวจสอบหมายเลขโทรศัพท์ใหม่");
+				location.reload();
+			}else{
+				signup_form.submit();
+			}
+		}else{
+			alert("กรุณาตรวจสอบหมายเลขโทรศัพท์");
+			return false;
+		}
+	});
+}
+
+saveVerifiedPhone = function(){
+	localStorage.verifiedphone = phone.value;
+	localStorage.otptoken = otptoken;
+	localStorage.refcode = refcode;
+	localStorage.otpstatus = true;
+}
+removeVerifiedPhone = function(){
+	localStorage.verifiedphone = '';
+	localStorage.otptoken = '';
+	localStorage.refcode = '';
+	localStorage.otpstatus = false;
+	
+	refcode = null; 
+	otptoken = null; 
+	otpstatus = false;
+}	
+//https://github.com/jackocnr/intl-tel-input
+var input = document.querySelector("#otp_phone");
+if(input ){
+	window.intlTelInput(input, {preferredCountries: ['th'],});
+}
+
+$('.iti__flag-container').click(function() { 
+  var countryCode = $('.iti__selected-flag').attr('title');
+  var countryCode = countryCode.replace(/[^0-9]/g,'')
+  $('#otp_phone').val("");
+  if(countryCode!='66'){
+    $('#otp_phone').val("+"+countryCode+" "+ $('#otp_phone').val());
+  }
+});
+});

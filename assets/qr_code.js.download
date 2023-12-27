@@ -1,0 +1,62 @@
+// qr-code cooldown
+let qr_cooldown_sec = 5*60;
+let thAmountLocale = Intl.NumberFormat('th-TH', {
+  style: 'currency',
+  currency: 'THB',
+});
+//Disable submit button
+$(document).on("change", "#method", (function (t) {
+	if($( "#method option:selected" ).text().toLowerCase().includes('qr')){
+		amount.value = '';
+		$('button[type=submit]').prop('disabled', true);
+	}
+}));
+//Disable submit button when amount less than 50
+$(document).on("keyup", "#amount", (function (t) {
+	if($( "#method option:selected" ).text().toLowerCase().includes('qr') && amount.value < 50){
+		$('button[type=submit]').prop('disabled', true);
+	}else{
+		$('button[type=submit]').prop('disabled', false);
+	}
+}));
+$(document).on('shown.bs.modal', "#qr-modal", function(){
+  	  $('#qr-modal div.modal-body').prepend('<p class="text-center alert alert-danger"><b style="color: #f2355d !important">การเติมเครดิตจะถูกปฏิเสธ หากไม่ฝากตามเงื่อนไข</b></p>');
+      $('#qr-modal form.modal-content').prepend('<div class="modal-header pb-0"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>');
+      document.querySelector("#qr-modal > div > form > div.modal-footer > button").setAttribute('data-bs-dismiss', 'modal')
+  	if(typeof fullname !== "undefined" ){
+      	$('#qr-modal div.modal-body').append('<p class="text-center" style="padding-top:20px;"><b style="color: #f2355d !important">QR Coed นี้ใช้สำหรับเว็บไซต์ SSM-TH.COM</b></p>')
+      	$('#qr-modal div.modal-body').append('<p class="text-center"><b style="color: #f2355d !important">และใช้ QR Coed นี้ได้ 1 ครั้งเท่านั้น!</b></p>')
+      	$('#qr-modal div.modal-body').append('<p class="text-center" style="padding-top:20px;"><span style="font-weight: 700;">งดฝากช่วงเวลา 23:30 น. - 00:30 น.</span></p>')
+      	$('#qr-modal div.modal-body').append('<p class="text-center">โอนจาก <u>บัญชีธนาคารเท่านั้น</u> ในชื่อ</p>')
+    	$('#qr-modal div.modal-body').append('<p class="text-success text-center" style="font-size:20px;">'+fullname+'</p>');
+        $('#qr-modal div.modal-body').append('<div id="qr-amount" class="row" style="padding:20px 30px;margin-bottom: 20px;border: 1.7px dashed;"><span>จำนวนเงิน</span><span class="text-right text-success w-75" style="font-size:1.5em">'+
+        thAmountLocale.format(amount.value).replace('฿','')+'&nbsp</span><span>บาท</span></div>')
+    }
+	$('#qr-modal div.modal-body').append('<p class="text-center"><b style="color: #f2355d !important"><i class="fas fa-exclamation-circle"></i> โปรดทำรายการภายในเวลา <span id="qr_cooldown_second"></span></b></p>');
+	qrResetTimeoutId = setTimeout(function(){
+	   // todo reset
+	  clearTimeout(qrCoolDownTimeoutId);
+	   // close modal
+	   $('#qr-modal').modal('hide');
+	}, qr_cooldown_sec * 1000);
+	
+	// render cooldown second
+	qrCoolDownTimeoutId = setTimeout(function(){ 
+	  qr_cooldown_second.textContent = qr_cooldown_sec;
+	  var y = setInterval(function() {
+		qr_cooldown_sec -= 1;
+		//qr_cooldown_second.textContent = qr_cooldown_sec;
+		qr_cooldown_second.textContent = (Math.floor(qr_cooldown_sec/60)+'').padStart(2, "0") + ':'+ ((qr_cooldown_sec - Math.floor(qr_cooldown_sec / 60) * 60)+'').padStart(2, "0");
+		// If the count down is finished, write some text
+		if(qr_cooldown_sec < 0 || document.getElementById('qr_cooldown_second') == null) {
+		  clearInterval(y);
+		}
+	  }, 1000);
+	}, 200);
+});
+
+// บัตรเดบิต / เครดิต gbPrimePay3dsCardModal
+$(document).on('shown.bs.modal', "#gbPrimePay3dsCardModal", function(){
+	$('#gbPrimePay3dsCardModal .modal-header').append('<button type="button" class="btn-close" data-bs-dismiss="modal"></button>');
+	$('#gbPrimePay3dsCardModal .modal-footer').html('<button type="button" class="btn btn-default btn-big-secondary" data-bs-dismiss="modal">ยกเลิก</button>')
+});

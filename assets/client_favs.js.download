@@ -1,0 +1,169 @@
+/* Created by smmspot.net 
+   Contact Us: suleyman@smmspot.net */
+var smmspot_hasLogin = false;
+const delay_stop_loading= 2000;
+if (typeof smmspot_userKey !== 'undefined') {
+    smmspot_hasLogin = true
+} else {
+    smmspot_hasLogin = false
+}
+async function postData(url='', data={}) {
+    const response = await fetch(url, {
+        method: 'POST',
+        mode: 'cors',
+        cache: 'no-cache',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-PINGOTHER': 'pingpong',
+        },
+        redirect: 'follow',
+        referrerPolicy: 'no-referrer',
+        body: JSON.stringify(data)
+    });
+    //debugger
+    return response.json()
+}
+$(function() {
+    if (document.querySelector('span.fav') && smmspot_hasLogin) {
+        postData(API_HOST_URL + '/api/', {
+            "user_key": smmspot_userKey
+        }).then(response=>{
+            if (response.hasFav) {
+                response.favs.map((item)=>{
+                    let el = document.querySelector('span.fav[data-id="' + item.service_id + '"] i');
+                    if (el) {
+						el.classList.remove('far');
+                        el.classList.add('fas');
+                        //el.classList.remove('smmspot-fb-isLoading')
+                    }
+                }
+                )
+            }
+        }
+        )
+    }
+});
+
+$('span.fav').click(function() {
+    let service_id = $(this).attr('data-id');
+    let th = $(this).children();
+	th.addClass('fas fa-spinner fa-spin').removeClass('far fa-star');
+	postData(API_HOST_URL + '/api/', {
+        user_key: smmspot_userKey,
+        service_id: service_id
+    }).then(response=>{
+        if (response.status) {
+            setTimeout(function(){
+			  th.removeClass('fa-spinner fa-spin far fas')
+              if (response.fav) {
+                th.addClass('fas fa-star')
+              } else {
+                th.addClass('far fa-star')
+              }
+            }, delay_stop_loading);
+        }
+    }
+    )
+});
+
+var isClicked = false;
+var favCats = [];
+var favServ = [];
+var hasFav = false;
+if ($('#tab-favorite').length) {
+    $(function() {
+        postData(API_HOST_URL + '/api/', {
+            user_key: smmspot_userKey
+        }).then(response=>{
+            if (response.hasFav) {
+                hasFav = true;
+                response.favs.map((item)=>{
+                    if (typeof window.modules.siteOrder.services[item.service_id] !== 'undefined') {
+                        favServ.push(item.service_id);
+                        favCats.push(window.modules.siteOrder.services[item.service_id].cid)
+                    }
+                }
+                )
+            } else {
+                hasFav = false
+            }
+        }
+        )
+    });
+    var activeTab = 'new';
+    var categories_data = $('#orderform-category').html();
+    $('body').append('<select style="display:none; opacity:0; visibility: hidden;" class="smmspot_categoriesSource"></select>');
+    $('#tab-favorite-btn').click(function() {
+        $('#brand-category-group').hide();
+        if (!hasFav) {
+            $('#tab-favorite').html('<div class=\"alert\" style=\"background: #FAF2EF; margin-top: 20px; color: #495057;\">คุณยังไม่มีบริการที่ชื่นชอบ คุณสามารถเพิ่มรายการโปรดได้ที่หน้า <a href=\"/services\" style="text-decoration: underline;">บริการของเรา</a></div>')
+        } else {
+            $("#order-form").prependTo('#tab-favorite');
+            $('#orderform-category').html('');
+            $('.smmspot_categoriesSource').html(categories_data);
+            $('.smmspot_categoriesSource').find('option').show();
+            $('.smmspot_categoriesSource').find('option').attr('data-show', 'hidden');
+            activeTab = 'fav';
+            favCats.map((key)=>{
+                $('.smmspot_categoriesSource').find('[value=' + key + ']').show();
+                $('.smmspot_categoriesSource').find('[value=' + key + ']').attr('data-show', 'show')
+            }
+            );
+            $('#orderform-category').html($('.smmspot_categoriesSource').html());
+            $('#orderform-category').find('option[data-show="hidden"]').remove();
+            $('#orderform-category').val($('#orderform-category > option').first().val());
+            $('#orderform-category').change();
+            $('#orderform-service').change()
+        }
+    });
+    var sCanChange = true;
+    $('#orderform-service').bind("DOMSubtreeModified", function() {
+        if (activeTab == 'fav' && sCanChange) {
+            sCanChange = false;
+            $('#orderform-service').find('option').hide();
+            $('#orderform-service').find('option').attr('data-show', 'hidden');
+            favServ.map((key)=>{
+                $('#orderform-service').find('[value=' + key + ']').show();
+                $('#orderform-service').find('[value=' + key + ']').attr('data-show', 'show')
+            }
+            );
+            $('#orderform-service').find('option[data-show="hidden"]').remove();
+            sCanChange = true
+        }
+    });
+    $('#tab-new-btn').click(function() {
+        $('#brand-category-group').show();
+        $("#order-form").prependTo('#tab-new');
+        activeTab = 'new';
+        $('#orderform-category').find('option').show();
+        $('#orderform-service').find('option').show();
+        $('#orderform-category').find('option').attr('data-show', 'show');
+        $('#orderform-service').find('option').attr('data-show', 'show');
+        $('#orderform-category').html(categories_data).change();
+        $('#orderform-service').change()
+    })
+	$('#tab-byid-btn').on('click', function() {
+        $('#brand-category-group').hide();
+		activeTab = 'byid';
+		$('#result_service_name').text('')
+	    $('#result_category_name').text('')
+        $("#tab-byid").addClass('service_not_found');
+        $("#order-form").appendTo('#tab-byid');
+        $('#input_service').val('')
+        $('#tab-byid #result_service_msg').hide();
+		$('#orderform-category').html(categories_data).change();
+		$('#orderform-service').change();
+    });
+}
+function getUrlParameter(sParam) {
+    var sPageURL = decodeURIComponent(window.location.search.substring(1));
+    var sURLVariables = sPageURL.split('&');
+    var sParameterName;
+    var i;
+    for (i = 0; i < sURLVariables.length; i++) {
+        sParameterName = sURLVariables[i].split('=');
+        if (sParameterName[0] === sParam) {
+            return sParameterName[1] === undefined ? true : sParameterName[1]
+        }
+    }
+}

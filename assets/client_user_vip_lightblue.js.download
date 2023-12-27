@@ -1,0 +1,104 @@
+const user_vip_url = API_HOST_URL + '/api/uservip.php';
+vip_subject_option = function(user_id){
+    postData(user_vip_url, {
+        "user_id": user_id
+    }).then(response=>{
+        subject = document.querySelector('select#subject');
+        if (subject && response.status && response.is_vip) {
+            subject.innerHTML = '<option value="VIP คำสั่งซื้อ" selected>VIP คำสั่งซื้อ</option>'+
+            '<option value="VIP การชำระเงิน">VIP การชำระเงิน</option>'+
+            '<option value="VIP เช่าเว็บปั้มไลค์">VIP เช่าเว็บปั้มไลค์</option>'+
+            '<option value="VIP API นักพัฒนา">VIP API นักพัฒนา</option>'+
+            '<option value="VIP จุดบกพร่อง Bug">VIP จุดบกพร่อง Bug</option>'+
+            '<option value="VIP คำขอ">VIP คำขอ</option>'+
+            '<option value="VIP อื่น ๆ">VIP อื่น ๆ</option>';
+        }
+    })
+}
+
+/*
+vip_subject_dripFeed_option = function(user_id, dripFeed_id){
+    postData(user_vip_url, {
+        "user_id": user_id
+    }).then(response=>{
+        subjects = document.querySelectorAll('select#subject[name="TicketForm[subject]"]');
+        if (subjects && response.status && response.is_vip) {
+            subjects.forEach(subject => {
+                subject.innerHTML = '<option value="VIP ขอเร่งความเร็ว #'+dripFeed_id+'">VIP ขอเร่งความเร็ว</option>'+
+                '<option value="VIP ขอเติมยอดลด #'+dripFeed_id+'">VIP ขอเติมยอดลด</option>'+
+                '<option value="VIP ขอรีสตาร์ท #'+dripFeed_id+'">VIP ขอรีสตาร์ท</option>'+
+                '<option value="VIP ขอยกเลิก #'+dripFeed_id+'">VIP ขอยกเลิก</option>'+
+                '<option value="VIP อื่น ๆ #'+dripFeed_id+'">VIP อื่น ๆ</option>';
+            });
+        }
+    })
+}
+
+vip_subject_order_option = function(user_id, order_id){
+    postData(user_vip_url, {
+        "user_id": user_id
+    }).then(response=>{
+        subjects = document.querySelectorAll('select#subject[name="TicketForm[subject]"]');
+        if (subject && response.status && response.is_vip) {
+            subjects.forEach(subject => {
+                subject.innerHTML = '<option value="VIP ขอเร่งความเร็ว #'+order_id+'">VIP ขอเร่งความเร็ว</option>'+
+                '<option value="VIP ขอเติมยอดลด #'+order_id+'">VIP ขอเติมยอดลด</option>'+
+                '<option value="VIP ขอรีสตาร์ท #'+order_id+'">VIP ขอรีสตาร์ท</option>'+
+                '<option value="VIP ขอยกเลิก #'+order_id+'">VIP ขอยกเลิก</option>'+
+                '<option value="VIP อื่น ๆ #'+order_id+'">VIP อื่น ๆ</option>';
+            });
+        }
+    })
+}
+
+vip_dashboard = function(user_id){
+    postData(user_vip_url, {
+        "user_id": user_id
+    }).then(response=>{
+        if (response.status && response.is_vip) {
+            document.querySelector('h4#user_level').innerText = 'VIP';
+            document.querySelector('.card-body .dual-status').remove();
+            document.querySelector('.card-body .row').remove();
+            document.querySelector('.card-body br').remove();
+            document.querySelector('.card-body').innerHTML = '<!--<div class="tab-pane fade" id="diamond" role="tabpanel" aria-labelledby="contact-tab">-->' +
+                '<div class="dual-status">' +
+                '    <div class="current-status">' +
+                '      <div class="media">' +
+                '        <div class="media-body">' +
+                '          <h4 class="media-heading">VIP (จากการซื้อ)</h4>' +
+                '          <p>ระดับปัจจุบัน</p>' +
+                '        </div>' +
+                '      </div>' +
+                '    </div>' +
+                '  <!--<p class="status-link">==========  ใช้จ่าย {{ paybiackcrown }}$ เพื่อรับ  ==========></p> -->' +
+                '</div>' +
+                '<div class="row">' +
+                '<div class="col-sm-4">' +
+                '  <ul class="acc-status-detail">' +
+                '              <li class="acc-status-li"><i class="far fa-badge-check" style="color:green"></i> ช่วยเหลือผ่านตั๋ว 24 ชม.</li>' +
+                '              <li class="acc-status-li"><i class="far fa-badge-check" style="color:green"></i> รับโบนัสเพิ่ม 5% เมื่อเติมเงิน **</li>' +
+                '              <li class="acc-status-li"><i class="far fa-badge-check" style="color:green"></i> สิทธิ์เข้าร่วมกิจกรรมพิเศษ</li>' +
+                '              <li class="acc-status-li"><i class="far fa-badge-check" style="color:green"></i> ส่วนลดราคาตัวแทนจำหน่าย 10-30%</li>' +
+                '            </ul>' +
+                '          </div>' +
+                '          <div class="col-sm-4">' +
+                '            <ul class="acc-status-detail">' +
+                '              <li><FONT COLOR="#707070"><strike>ลุ้นรับเครดิต 10,000 บาท ทุกเดือน ***</strike></FONT></li>' +
+                '              <li class="acc-status-li"><i class="far fa-badge-check" style="color:green"></i> เพิ่มลำดับความสำคัญการสนับสนุนผ่านตั๋ว</li>' +
+                '              <li class="acc-status-li"><i class="far fa-badge-check" style="color:green"></i> การแจ้งเตือนล่วงหน้าเกี่ยวกับบริการใหม่</li>' +
+                '              <li><FONT COLOR="#707070"><strike>เช่า-ซื้อ เว็บไซต์โปรแกรมในราคาพิเศษ</strike></FONT></li>' +
+                '            </ul>' +
+                '          </div>' +
+                '          <div class="col-sm-4">' +
+                '            <ul class="acc-status-detail">' +
+                '              <li><FONT COLOR="#707070"><strike>ได้ส่วนลดพิเศษเฉพาะโดยแอดมิน</strike></FONT></li>' +
+                '              <li><FONT COLOR="#707070"><strike>บริการที่กำหนดเอง</strike></FONT></li>' +
+                '              <li><FONT COLOR="#707070"><strike>ได้รับเว็บไซต์ปั้มไลค์แผงรายย่อย ฟรี</strike></FONT></li>' +
+                '              <li><FONT COLOR="#707070"><strike>ช่วยเหลือโดยผู้ดูแลระบบผ่าน LINE</strike></FONT></li>' +
+                '  </ul>' +
+                '</div>' +
+                '</div><br>';
+        }
+    });
+}
+*/

@@ -1,0 +1,77 @@
+/*
+฿5.42076 
+≈ $0.1626096 
+≈ ₩201.1651509 
+≈ ¥1.0309124 
+≈ ₹12.4817826 
+≈ 0.1490187 € 
+≈ 2.4008494 TL 
+≈ 21.7897412 ₽ 
+≈ 3,720.1823396 ₫ 
+*/
+const thb_prefix = '฿';
+const usd_prefix = '≈ $';
+const inr_prefix = '≈ ₹';
+const cny_prefix = '≈ ¥';
+const krw_prefix = '≈ ₩';
+
+const eur_suffix = ' €';
+const try_suffix = ' TL';
+const rub_suffix = ' ₽';
+const vnd_suffix = ' ₫';
+
+const almost_eq_sign = "≈ ";
+//const caret = " <i class=\"fa fa-caret-down\">";
+const caret = "";
+function formatCurrency(text){
+	var tmpBalance = $('#current_balance_hidden').val();
+	if(text){
+		tmpBalance = text;
+	}
+	if(tmpBalance.indexOf(thb_prefix) >-1){
+		var digit = tmpBalance.split(thb_prefix)[1]
+		var formattedDigit = digit.slice(0, (digit.indexOf("."))+3)
+		$('#current_balance').html(thb_prefix + formattedDigit + caret)
+	}else if(tmpBalance.indexOf(usd_prefix) >-1){
+		var digit = tmpBalance.split(usd_prefix)[1]
+		var formattedDigit = digit.slice(0, (digit.indexOf("."))+3)
+		$('#current_balance').html(usd_prefix + formattedDigit + caret)
+	}else if(tmpBalance.indexOf(inr_prefix) >-1){
+		var digit = tmpBalance.split(inr_prefix)[1]
+		var formattedDigit = digit.slice(0, (digit.indexOf("."))+3)
+		$('#current_balance').html(inr_prefix + formattedDigit + caret)
+	}else if(tmpBalance.indexOf(cny_prefix) >-1){
+		var digit = tmpBalance.split(cny_prefix)[1]
+		var formattedDigit = digit.slice(0, (digit.indexOf("."))+3)
+		$('#current_balance').html(cny_prefix + formattedDigit + caret)
+	}else if(tmpBalance.indexOf(krw_prefix) >-1){
+		var digit = tmpBalance.split(krw_prefix)[1]
+		var formattedDigit = digit.slice(0, (digit.indexOf("."))+3)
+		$('#current_balance').html(krw_prefix + formattedDigit + caret)
+	}else if(tmpBalance.indexOf(eur_suffix) >-1){
+		var digit = tmpBalance.split(eur_suffix)[0].replace('≈ ','')
+		var formattedDigit = digit.slice(0, (digit.indexOf("."))+3)
+		$('#current_balance').html(almost_eq_sign + formattedDigit+ eur_suffix + caret)
+	}else if(tmpBalance.indexOf(try_suffix) >-1){
+		var digit = tmpBalance.split(try_suffix)[0].replace('≈ ','')
+		var formattedDigit = digit.slice(0, (digit.indexOf("."))+3)
+		$('#current_balance').html(almost_eq_sign + formattedDigit+ try_suffix + caret)
+	}else if(tmpBalance.indexOf(rub_suffix) >-1){
+		var digit = tmpBalance.split(rub_suffix)[0].replace('≈ ','')
+		var formattedDigit = digit.slice(0, (digit.indexOf("."))+3)
+		$('#current_balance').html(almost_eq_sign + formattedDigit+ rub_suffix + caret)
+	}else if(tmpBalance.indexOf(vnd_suffix) >-1){
+		var digit = tmpBalance.split(vnd_suffix)[0].replace('≈ ','')
+		var formattedDigit = digit.slice(0, (digit.indexOf("."))+3)
+		$('#current_balance').html(almost_eq_sign + formattedDigit+ vnd_suffix + caret)
+	}
+    $('#current_balance_top').html($('#current_balance').html());
+}
+
+
+
+
+
+
+
+
